@@ -39,15 +39,11 @@ def subject(callback):
     count = 0
     if callback.data in ['sig', 'seg', 'eg', 'ng', 'back']:
         kb = types.InlineKeyboardMarkup(row_width=1)
-        lexis = types.InlineKeyboardButton(text='ЛЕКСИКА', callback_data='lexis')
-        word = types.InlineKeyboardButton(text='СЛОВООБРАЗОВАНИЕ', callback_data='word')
-        orthography = types.InlineKeyboardButton(text='ОРФОГРАФИЯ', callback_data='orthography')
-        parts_of_speech = types.InlineKeyboardButton(text='ЧАСТИ РЕЧИ', callback_data='parts_of_speech')
-        kb.add(lexis, word, orthography, parts_of_speech)
+        kb.add(*[types.InlineKeyboardButton(text=name, callback_data='lexis') for name in db_worker.themes])
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Выберите тему.',
                               reply_markup=kb)
         count = 0
-    if callback.data in ['parts_of_speech', 'lexis', 'word', 'orthography']:
+    if callback.data in ['parts_of_speech', 'lexis', 'word', 'orthography']: # ВОТ ТУТ ЕЩЕ ДО УМА ДБ ДОВЕСТИ НАДО
         prt = types.InlineKeyboardMarkup(row_width=1)
         theory = types.InlineKeyboardButton(text='ТЕОРИЯ', callback_data='theory')
         tests = types.InlineKeyboardButton(text='ТЕСТЫ', callback_data='tests')
