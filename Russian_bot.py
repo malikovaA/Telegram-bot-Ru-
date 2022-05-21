@@ -1,7 +1,6 @@
 from TOKEN import token
 import telebot
 from telebot import types
-from telebot import util
 from random import randint
 
 bot = telebot.TeleBot(token)
