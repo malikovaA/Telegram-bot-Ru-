@@ -16,10 +16,10 @@ create_table_theory = '''CREATE TABLE theory (
                        FOREIGN KEY (theme_id)
                         REFERENCES themes (id));'''
 insert_classes = '''INSERT INTO classes (id, title)
-                    VALUES (1, "Шестой"),
-                    (2, "Седьмой"),
-                    (3, "Восьмой"),
-                    (4, "Девятый");'''
+                    VALUES (1, "Шестой класс"),
+                    (2, "Седьмой класс"),
+                    (3, "Восьмой класс"),
+                    (4, "Девятый класс");'''
 insert_themes = '''INSERT INTO themes (id, title)
                     VALUES (1, "ЛЕКСИКА"),
                     (2, "СЛОВООБРАЗОВАНИЕ"),
@@ -30,9 +30,15 @@ insert_theory = '''INSERT INTO theory (id, content, theme_id)
                     (2, "https://russkiiyazyk.ru/slovoobrazovanie/sposoby-slovoobrazovaniia.html", 2),
                     (3, "https://grammatika-rus.ru/glavnaya/orfograficheskij-razbor/orfografiya-v-tablitsah/", 3),
                     (4, "https://russkiiyazyk.ru/chasti-rechi/chasti-rechi.html", 4);'''
+grades = conn.execute('''SELECT title FROM classes''').fetchall()
+grades = [grades[i][0] for i in range(len(grades))]
+themes = conn.execute('''SELECT title FROM themes''').fetchall()
+themes = [themes[i][0] for i in range(len(themes))]
+theory = conn.execute('''SELECT content FROM theory''').fetchall()
+theory = [theory[i][0] for i in range(len(theory))]
 
-"""" 
-Блок команд для создания таблиц в нашей БД 
+""""
+Блок команд для создания таблиц в нашей БД
 и заполнения базовыми данными
 
 cursor.execute(create_table_classes)
@@ -47,4 +53,7 @@ cursor.execute(insert_theory)
 IF NOT EXISTS при создании таблиц
 
 """
+
+print(grades)
+
 

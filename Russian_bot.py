@@ -2,6 +2,7 @@ from TOKEN import token
 import telebot
 from telebot import types
 from random import randint
+import db_worker
 
 bot = telebot.TeleBot(token)
 
@@ -30,11 +31,7 @@ def start(message):
     @bot.message_handler(func=lambda m: m.text == '01035')
     def start(message):
         startKBoard = types.InlineKeyboardMarkup(row_width=1)
-        six_grade = types.InlineKeyboardButton(text='6 класс', callback_data='sig') #Выбор класса
-        seven_grade = types.InlineKeyboardButton(text='7 класс', callback_data='seg')
-        eight_grade = types.InlineKeyboardButton(text='8 класс', callback_data='eg')
-        nine_grade = types.InlineKeyboardButton(text='9 класс', callback_data='ng')
-        startKBoard.add(six_grade, seven_grade, eight_grade, nine_grade)
+        startKBoard.add(*[types.InlineKeyboardButton(text=name, callback_data='back') for name in db_worker.grades])
         bot.send_message(message.chat.id, 'Выберите свой класс.', reply_markup=startKBoard)
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
