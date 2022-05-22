@@ -54,11 +54,9 @@ def subject(callback):
                                   reply_markup=prt)
     if callback.data == 'theory':
         sources = types.InlineKeyboardMarkup(row_width=1)
-        theory = types.InlineKeyboardButton(text='Тема 1', url='https://yandex.ru/')
-        tests = types.InlineKeyboardButton(text='Тема 2', url='https://www.google.com/')
-        results = types.InlineKeyboardButton(text='Тема 3', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         back = types.InlineKeyboardButton(text='Назад', callback_data='back')
-        sources.add(theory, tests, results, back)
+        sources.add(*[types.InlineKeyboardButton(text=k, url=v) for k,v in zip(db_worker.theory_titles, db_worker.theory_content)])
+        sources.add(back)
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Ознакомтесь с источниками.',
                                   reply_markup=sources)
     if callback.data == 'results':
