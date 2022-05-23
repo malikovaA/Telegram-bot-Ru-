@@ -6,9 +6,43 @@ cursor = conn.cursor()
 create_table_classes = '''CREATE TABLE classes (
                        id INTEGER PRIMARY KEY,
                        title TEXT NOT NULL);'''
+create_table_students = '''CREATE TABLE students (
+                       id INTEGER PRIMARY KEY,
+                       name TEXT NOT NULL,
+                       class_id INTEGER NOT NULL,
+                       FOREIGN KEY (class_id)
+                        REFERENCES classes (id));'''
 create_table_themes = '''CREATE TABLE themes (
                        id INTEGER PRIMARY KEY,
                        title TEXT NOT NULL);'''
+create_table_test_names = '''CREATE TABLE test_names (
+                       id INTEGER PRIMARY KEY,
+                       title TEXT NOT NULL,
+                       theme_id INTEGER NOT NULL,
+                       FOREIGN KEY (theme_id)
+                        REFERENCES themes (id));'''
+create_table_test_questions = '''CREATE TABLE test_questions (
+                       id INTEGER PRIMARY KEY,
+                       content TEXT NOT NULL,
+                       test_id INTEGER NOT NULL,
+                       FOREIGN KEY (test_id)
+                        REFERENCES test_names (id));'''
+create_table_test_answers = '''CREATE TABLE test_answers (
+                       id INTEGER PRIMARY KEY,
+                       content TEXT NOT NULL,
+                       right INTEGER NOT NULL,
+                       test_q_id INTEGER NOT NULL,
+                       FOREIGN KEY (test_q_id)
+                        REFERENCES test_questions (id));'''
+create_table_results = '''CREATE TABLE results (
+                       id INTEGER PRIMARY KEY,
+                       result INT NOT NULL,
+                       test_id INTEGER NOT NULL,
+                       student_id INTEGER NOT NULL,
+                       FOREIGN KEY (test_id)
+                        REFERENCES test_names (id),
+                       FOREIGN KEY (student_id)
+                        REFERENCES students (id));'''
 create_table_theory = '''CREATE TABLE theory (
                        id INTEGER PRIMARY KEY,
                        title TEXT NOT NULL,
@@ -39,6 +73,10 @@ insert_theory = '''INSERT INTO theory (id, title, content, theme_id)
 cursor.execute(create_table_classes)
 cursor.execute(create_table_themes)
 cursor.execute(create_table_theory)
+cursor.execute(create_table_test_names)
+cursor.execute(create_table_test_questions)
+cursor.execute(create_table_test_answers)
+cursor.execute(create_table_results)
 cursor.execute(insert_classes)
 cursor.execute(insert_themes)
 cursor.execute(insert_theory)
@@ -57,12 +95,5 @@ theory_dict = [{theory[i][0]: theory[i][1]} for i in range(len(theory))]
 theory_list = [(theory[i][0], theory[i][1]) for i in range(len(theory))]
 theory_titles = [theory[i][0] for i in range(len(theory))]
 theory_content = [theory[i][1] for i in range(len(theory))]
-# for k,v in zip(theory_titles, theory_content): # Эта ерунда для проверки работы функции zip
-#     print(k)
-#     print(v)
-# for i in theory_dict: # Эта ерунда просто для проверки того, как работает словарь theory_dict
-#     for k in i:
-#         print(k)
-#         print(i[k])
 
 
