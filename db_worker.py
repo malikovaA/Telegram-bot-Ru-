@@ -1,7 +1,67 @@
 import sqlite3
+from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
+    Column, DateTime, ForeignKey, Numeric
+from sqlalchemy.ext.declarative import declarative_base
 
-conn = sqlite3.connect('bot_db', check_same_thread=False, isolation_level=None)
-cursor = conn.cursor()
+# conn = sqlite3.connect('bot_db', check_same_thread=False, isolation_level=None)
+# cursor = conn.cursor()
+
+engine = create_engine('sqlite:///bot_db')
+cursor = engine.connect()
+
+
+
+Base = declarative_base()
+
+class Class(Base):
+    __tablename__ = 'classes'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+
+class Student(Base):
+    __tablename__ = 'students'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    class_id = Column(Integer, ForeignKey('classes.id'))
+
+class Theme(Base):
+    __tablename__ = 'themes'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+
+class Test_name(Base):
+    __tablename__ = 'test_names'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+    theme_id = Column(Integer, ForeignKey('themes.id'))
+
+class Test_question(Base):
+    __tablename__ = 'test_questions'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+    test_id = Column(Integer, ForeignKey('test_names.id'))
+
+class Test_answer(Base):
+    __tablename__ = 'test_answer'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+    right = Column(Integer, nullable=False)
+    test_q_id = Column(Integer, ForeignKey('test_questions.id'))
+
+class Result(Base):
+    __tablename__ = 'results'
+    id = Column(Integer, primary_key=True)
+    result = Column(Integer, nullable=False)
+    test_id = Column(Integer, ForeignKey('test_names.id'))
+    student_id = Column(Integer, ForeignKey('students.id'))
+
+class Theory(Base):
+    __tablename__ = 'theory'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+    content = Column(String(100), nullable=False)
+    theme_id = Column(Integer, ForeignKey('themes.id'))
+
 
 create_table_classes = '''CREATE TABLE classes (
                        id INTEGER PRIMARY KEY,
@@ -86,14 +146,14 @@ cursor.execute(insert_theory)
 IF NOT EXISTS при создании таблиц
 
 """
-grades = conn.execute('''SELECT title FROM classes''').fetchall()
-grades = [grades[i][0] for i in range(len(grades))]
-themes = conn.execute('''SELECT title FROM themes''').fetchall()
-themes = [themes[i][0] for i in range(len(themes))]
-theory = conn.execute('''SELECT title, content FROM theory''').fetchall()
-theory_dict = [{theory[i][0]: theory[i][1]} for i in range(len(theory))]
-theory_list = [(theory[i][0], theory[i][1]) for i in range(len(theory))]
-theory_titles = [theory[i][0] for i in range(len(theory))]
-theory_content = [theory[i][1] for i in range(len(theory))]
+# grades = conn.execute('''SELECT title FROM classes''').fetchall()
+# grades = [grades[i][0] for i in range(len(grades))]
+# themes = conn.execute('''SELECT title FROM themes''').fetchall()
+# themes = [themes[i][0] for i in range(len(themes))]
+# theory = conn.execute('''SELECT title, content FROM theory''').fetchall()
+# theory_dict = [{theory[i][0]: theory[i][1]} for i in range(len(theory))]
+# theory_list = [(theory[i][0], theory[i][1]) for i in range(len(theory))]
+# theory_titles = [theory[i][0] for i in range(len(theory))]
+# theory_content = [theory[i][1] for i in range(len(theory))]
 
 
