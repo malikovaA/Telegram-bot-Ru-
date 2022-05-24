@@ -153,14 +153,14 @@ cursor.execute(insert_theory)
 IF NOT EXISTS при создании таблиц
 
 """
-# grades = conn.execute('''SELECT title FROM classes''').fetchall()
-# grades = [grades[i][0] for i in range(len(grades))]
-# themes = conn.execute('''SELECT title FROM themes''').fetchall()
-# themes = [themes[i][0] for i in range(len(themes))]
-# theory = conn.execute('''SELECT title, content FROM theory''').fetchall()
-# theory_dict = [{theory[i][0]: theory[i][1]} for i in range(len(theory))]
-# theory_list = [(theory[i][0], theory[i][1]) for i in range(len(theory))]
-# theory_titles = [theory[i][0] for i in range(len(theory))]
-# theory_content = [theory[i][1] for i in range(len(theory))]
+grades = conn.execute('''SELECT title FROM classes''').fetchall()
+grades = [grades[i][0] for i in range(len(grades))]
+themes = conn.execute('''SELECT title FROM themes''').fetchall()
+themes = [themes[i][0] for i in range(len(themes))]
+theory = conn.execute('''SELECT title, content FROM theory''').fetchall()
+theory_dict = [{theory[i][0]: theory[i][1]} for i in range(len(theory))]
+theory_list = [(theory[i][0], theory[i][1]) for i in range(len(theory))]
+theory_titles = [theory[i][0] for i in range(len(theory))]
+theory_content = [theory[i][1] for i in range(len(theory))]
 
 

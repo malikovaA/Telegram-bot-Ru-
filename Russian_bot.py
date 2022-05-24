@@ -2,7 +2,9 @@ from TOKEN import token
 import telebot
 from telebot import types
 from random import randint
-from db import db_worker, sqlalch
+# from db import db_worker # тут был вариант с реализацией через rawSQL (сырой SQL код)
+from db import sqlalch as sql
+
 
 bot = telebot.TeleBot(token)
 
@@ -13,21 +15,26 @@ def start(message):
                                       'Для продолжения работы <b> введите пароль </b>. \n'
                                       'Узнать его можно у своего преподавателя по русскому языку.\n'
                                       'Для ученика пароль 1111, для учителя 0000.', parse_mode='HTML')
+
+    ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
     @bot.message_handler(func=lambda m: m.text == '1111')
     def start(message):
         startKBoard = types.InlineKeyboardMarkup(row_width=1)
-        startKBoard.add(*[types.InlineKeyboardButton(text=name, callback_data='back') for name in db_worker.grades])
+        startKBoard.add(*[types.InlineKeyboardButton(text=title, callback_data='back') for title in ls])
         bot.send_message(message.chat.id, 'Выберите свой класс.', reply_markup=startKBoard)
 
     @bot.message_handler(func=lambda m: m.text == '0000')
     def start(message):
         startKBoard = types.InlineKeyboardMarkup(row_width=1)
-        startKBoard.add(*[types.InlineKeyboardButton(text=name, callback_data='teacher') for name in db_worker.grades])
+        startKBoard.add(*[types.InlineKeyboardButton(text=title, callback_data='teacher') for title in ls])
         bot.send_message(message.chat.id, 'Здравствуйте, учитель, выберите класс.', reply_markup=startKBoard)
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def subject(callback):
     count = 0
+    theme_titles = [i[0] for i in sql.session.query(sql.Theme.title).all()]
+    theory_titles = [i[0] for i in sql.session.query(sql.Theory.title).all()]
+    theory_content = [i[0] for i in sql.session.query(sql.Theory.content).all()]
 
     """ Главное меню для учителя """
     if callback.data in ['teacher', 'back_t']:
@@ -59,7 +66,7 @@ def subject(callback):
     if callback.data in ['theme_choose_t']:
         kb = types.InlineKeyboardMarkup(row_width=1)
         back_t = types.InlineKeyboardButton(text='Назад', callback_data='back_t')
-        kb.add(*[types.InlineKeyboardButton(text=name, callback_data='theme_t') for name in db_worker.themes])
+        kb.add(*[types.InlineKeyboardButton(text=title, callback_data='theme_t') for title in theme_titles])
         kb.add(back_t)
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Выберите тему.',
                               reply_markup=kb)
@@ -129,7 +136,7 @@ def subject(callback):
         """ Главное меню для ученика """
     if callback.data in ['back']:
         kb = types.InlineKeyboardMarkup(row_width=1)
-        kb.add(*[types.InlineKeyboardButton(text=name, callback_data='theme_s') for name in db_worker.themes])
+        kb.add(*[types.InlineKeyboardButton(text=title, callback_data='theme_s') for title in theme_titles])
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Выберите тему.',
                               reply_markup=kb)
         count = 0
@@ -148,7 +155,9 @@ def subject(callback):
     if callback.data == 'theory':
         sources = types.InlineKeyboardMarkup(row_width=1)
         back = types.InlineKeyboardButton(text='Назад', callback_data='back')
-        sources.add(*[types.InlineKeyboardButton(text=k, url=v) for k,v in zip(db_worker.theory_titles, db_worker.theory_content)])
+        sources.add(*[types.InlineKeyboardButton(text=title, url=content) for title, content in zip(
+            theme_titles, theory_content
+        )])
         sources.add(back)
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Ознакомтесь с источниками.',
                                   reply_markup=sources)
