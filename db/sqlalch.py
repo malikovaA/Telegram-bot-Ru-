@@ -3,7 +3,7 @@ from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Session
 
-engine = create_engine('sqlite:///db/bot_db?check_same_thread=False')
+engine = create_engine('sqlite:///bot_db?check_same_thread=False')
 cursor = engine.connect()
 session = Session(bind=engine)
 
@@ -64,7 +64,7 @@ class Theory(Base):
     content = Column(String(100), nullable=False)
     theme_id = Column(Integer, ForeignKey('themes.id'))
 
-Base.metadata.drop_all(engine) # Удаление всего
+# Base.metadata.drop_all(engine) # Удаление всего
 Base.metadata.create_all(engine)
 
 c6 = Class(title='Шестой класс')
