@@ -19,6 +19,9 @@ def start(message):
     ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
     @bot.message_handler(func=lambda m: m.text == '1111')
     def start(message):
+        student = sql.Student(id=message.chat.id, name=f'{message.from_user.first_name} {message.from_user.last_name}', class_id=4)
+        sql.session.add(student)
+        sql.session.commit() # Запись ученика в БД
         startKBoard = types.InlineKeyboardMarkup(row_width=1)
         startKBoard.add(*[types.InlineKeyboardButton(text=title, callback_data='back') for title in ls])
         bot.send_message(message.chat.id, 'Выберите свой класс.', reply_markup=startKBoard)
