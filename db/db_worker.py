@@ -2,6 +2,7 @@ import sqlite3
 from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
     Column, DateTime, ForeignKey, Numeric
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 # conn = sqlite3.connect('bot_db', check_same_thread=False, isolation_level=None)
 # cursor = conn.cursor()
@@ -23,23 +24,29 @@ class Student(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     class_id = Column(Integer, ForeignKey('classes.id'))
+    results = relationship('Result', backref='student')
 
 class Theme(Base):
     __tablename__ = 'themes'
     id = Column(Integer, primary_key=True)
     title = Column(String(100), nullable=False)
+    tests = relationship('Test_name', backref='theme')
+    theory = relationship('Theory', backref='theme')
 
 class Test_name(Base):
     __tablename__ = 'test_names'
     id = Column(Integer, primary_key=True)
     title = Column(String(100), nullable=False)
     theme_id = Column(Integer, ForeignKey('themes.id'))
+    questions = relationship('Test_questions', backref='test_name')
+    results = relationship('Result', backref='test_name')
 
 class Test_question(Base):
     __tablename__ = 'test_questions'
     id = Column(Integer, primary_key=True)
     title = Column(String(100), nullable=False)
     test_id = Column(Integer, ForeignKey('test_names.id'))
+    answers = relationship('Test_answer', backref='question')
 
 class Test_answer(Base):
     __tablename__ = 'test_answer'

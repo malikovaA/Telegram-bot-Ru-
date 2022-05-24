@@ -2,25 +2,9 @@ from TOKEN import token
 import telebot
 from telebot import types
 from random import randint
-import db_worker
+from db import db_worker, sqlalch
 
 bot = telebot.TeleBot(token)
-
-# text = open('','r',encoding='utf8').read()
-# for message1 in util.smart_split(text, 1000):   # метод util.smart_split позволяет присылать большие тексты
-#     bot.send_message(message.chat.id, message1)
-
-# @bot.message_handler(commands=['start'])
-# def start(message):
-#     bot.send_poll(message.chat.id, question='Как дела?', options=['Хорошо', 'Нормально', 'Плохо'],
-#                   allows_multiple_answers=False, is_anonymous=True)
-
-# @bot.message_handler()
-# def name(message):
-#     sent = bot.reply_to(message, '')
-#     bot.register_next_step_handler(sent, rewiew)
-# def review(message):
-#     message_to_save = message.text
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -100,6 +84,27 @@ def subject(callback):
         kb.add(back_t)
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='Добавьте файл установленного формата с тестом',
                               reply_markup=kb)
+        """
+        Тут будет функция для импорта теста из sql_methods.py
+        
+        @bot.message_handler(content_types=['document'])
+        def handle_docs_photo(message):
+            try:
+                chat_id = message.chat.id
+
+                file_info = bot.get_file(message.document.file_id)
+                downloaded_file = bot.download_file(file_info.file_path)
+
+                src = 'files/' + message.document.file_name
+                with open(src, 'wb') as new_file:
+                    new_file.write(downloaded_file)
+
+
+                bot.reply_to(message, "Пожалуй, я сохраню это")
+            except Exception as e:
+                bot.reply_to(message, e)
+        """
+
 
         """ Раздел со статистикой по теме """
     if callback.data in ['stat_t_theme']:
