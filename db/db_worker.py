@@ -4,7 +4,7 @@ from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
-# conn = sqlite3.connect('db/bot_db', check_same_thread=False, isolation_level=None)
+# conn = sqlite3.connect('bot_db', check_same_thread=False, isolation_level=None)
 # cursor = conn.cursor()
 
 engine = create_engine('sqlite:///bot_db')

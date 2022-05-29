@@ -1,10 +1,20 @@
-from sqlalch import Class, Student, Theme, Test_name, Test_answer, Test_question, Result, Theory
+# from sqlalch import Class, Student, Theme, Test_name, Test_answer, Test_question, Result, Theory
 from openpyxl import load_workbook
 
 # import telebot
 # bot = telebot.TeleBot(token)
 #
 
+def get_or_create(session, model, **kwargs):
+    instance = session.query(model).filter_by(**kwargs).first()
+    if instance:
+
+        return instance
+    else:
+        instance = model(**kwargs)
+        session.add(instance)
+        session.commit()
+        return instance
 
 """ 
     Пока эта функция просто читает каждую строку файла Excel
