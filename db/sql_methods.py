@@ -21,7 +21,8 @@ def get_or_create(session, model, **kwargs):
 def import_test(doc_name):
     wb = load_workbook(filename=doc_name)
     sheet = wb.active
-    new_test = Test_name(title=doc_name) #Создается новый экземпляр теста со значением имени файла (название теста)
+    new_test = Test_name(title=doc_name)
+    '''Создается новый экземпляр теста со значением имени файла (название теста)'''
     session.add(new_test)
     session.commit()
     '''Чтение каждой строки'''
@@ -44,6 +45,6 @@ def import_test(doc_name):
                 new_answer = Test_answer(content=cell.value, right=1, test_q_id=new_question.id)
                 session.add(new_answer)
                 session.commit()
-            return 'Тест успешно импортирован'
+    return 'Тест успешно импортирован'
 
 import_test('test.xlsx')
