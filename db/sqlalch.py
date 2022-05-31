@@ -3,7 +3,7 @@ from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Session
 
-engine = create_engine('sqlite:///db/bot_db?check_same_thread=False')
+engine = create_engine('sqlite:///bot_db?check_same_thread=False')
 cursor = engine.connect()
 session = Session(bind=engine)
 
@@ -97,4 +97,3 @@ tt4 = Theory(title='Части речи',content='https://russkiiyazyk.ru/chasti
 # for i in range(1,5):
 #     session.add(Student(name=f'Denis Petrov{i}', class_id=i))
 # session.commit()
-

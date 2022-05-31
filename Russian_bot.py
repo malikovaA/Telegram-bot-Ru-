@@ -65,7 +65,7 @@ def subject(callback):
                               reply_markup=startKBoard)
 
     """ Главное меню для учителя """
-    for i in range(5):
+    for i in range(1,5):
         if callback.data in [f'class{i}', f'back_t{i}']:
             if count_t == 0:
                 count_t = i
@@ -75,34 +75,34 @@ def subject(callback):
             add_theme = types.InlineKeyboardButton(text='Добавить тему', callback_data='add_theme')
             choose_class = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             send_something = types.InlineKeyboardButton(text=f'Сделать рассылку для {i+5} класса', callback_data=f'send_something{i}')
-            kb.add(stat, theme, add_theme, choose_class)
+            kb.add(stat, theme, add_theme, send_something, choose_class)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
                                   text='Выберите опцию.',
                                   reply_markup=kb)
 
-        """ Создание рассылки """
-        for i in range(5):
-            if callback.data in [f'send_something{i}']:
-                text = f'Напишите в чат сообщение, которые нужно отправить в рассылку {i+5} классу.'
-                bot.send_message(callback.message.chat.id, text)
+    """ Создание рассылки """
+    for i in range(1,5):
+        if callback.data in [f'send_something{i}']:
+            text = f'Напишите в чат сообщение, которые нужно отправить в рассылку {i+5} классу.'
+            choose_class = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
+            kb = types.InlineKeyboardMarkup(row_width=1)
+            kb.add(choose_class)
+            bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                  text=text,
+                                  reply_markup=kb)
 
-                @bot.message_handler(content_types=["text"])
-                def send_message_to_class(message):
-                    students_id_from_class = sql.session.query(sql.Student.id).filter(sql.Student.class_id==i)
-                    students_id_from_class = [j[0] for j in students_id_from_class]
-                    for id in students_id_from_class:
-                        bot.send_message(id, f'{message.text}')
-                    text_message = f'Рассылка вида:\n{message.text}\nУспешно отправлена!'
-                    kb = types.InlineKeyboardMarkup(row_width=1)
-                    back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
-                    kb.add(back_t)
-                    bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text_message,
-                                      reply_markup=kb)
-
-
+            @bot.message_handler(content_types=["text"])
+            def send_message_to_class(message):
+                students_id_from_class = sql.session.query(sql.Student.id).filter(sql.Student.class_id==i)
+                students_id_from_class = [j[0] for j in students_id_from_class]
+                for id in students_id_from_class:
+                    bot.send_message(id, f'{message.text}')
+                text_message = f'Рассылка вида:\n{message.text}\nУспешно отправлена!'
+                bot.send_message(callback.message.chat.id, text=text_message,
+                                 reply_markup=kb)
 
         """ Статистика по классу """
-    for i in range(5):
+    for i in range(1,5):
         if callback.data in [f'stat_t{i}']:
             result = sql.session.query(sql.Result.result, sql.Test_name.title, sql.Student.name, sql.Theme.title) \
                 .select_from(sql.Result).join(sql.Test_name).join(

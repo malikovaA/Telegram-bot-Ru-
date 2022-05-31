@@ -1,4 +1,4 @@
-from sqlalch import session, Class, Student, Theme, Test_name, Test_answer, Test_question, Result, Theory
+from .sqlalch import session,Test_name, Test_answer, Test_question
 from openpyxl import load_workbook
 
 # import telebot
@@ -47,4 +47,4 @@ def import_test(doc_name):
                 session.commit()
     return 'Тест успешно импортирован'
 
-import_test('test.xlsx')
+# import_test('test.xlsx')
