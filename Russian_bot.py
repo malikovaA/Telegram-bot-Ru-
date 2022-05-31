@@ -53,6 +53,15 @@ def subject(callback):
     results_ = [i[0] for i in sql.session.query(sql.Result.id).all()]
     tests_ = [i[0] for i in sql.session.query(sql.Test_name.title).all()]
     questions = [i[0] for i in sql.session.query(sql.Test_question.id).all()]
+    ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
+
+    if callback.data == 'choose_class':
+        startKBoard = types.InlineKeyboardMarkup(row_width=1)
+        startKBoard.add(
+            *[types.InlineKeyboardButton(text=title, callback_data='class' + str(ls.index(title) + 1)) for title in ls])
+        bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                              text='Выберите класс.',
+                              reply_markup=startKBoard)
 
     """ Главное меню для учителя """
     for i in range(5):
@@ -63,7 +72,8 @@ def subject(callback):
             stat = types.InlineKeyboardButton(text='Статистика', callback_data=f'stat_t{i}')
             theme = types.InlineKeyboardButton(text='Выберите тему', callback_data='theme_choose_t')
             add_theme = types.InlineKeyboardButton(text='Добавить тему', callback_data='add_theme')
-            kb.add(stat, theme, add_theme)
+            choose_class = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
+            kb.add(stat, theme, add_theme, choose_class)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
                                   text='Выберите опцию.',
                                   reply_markup=kb)
