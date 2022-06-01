@@ -41,7 +41,7 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def subject(callback):
-    global student_name
+    global student_name, answer_counter
     count = 0
     back__ = 0
     count_t = 0
@@ -377,30 +377,42 @@ def subject(callback):
             questions_by_test_ = [i[0] for i in questions_by_test]
             questions_by_test_id = [i[1] for i in questions_by_test]
             text = f'Выберите правильные ответы на вопросы:\n'
+            poll_count = 0
 
             for question, id in zip(questions_by_test_, questions_by_test_id):
+                poll_count =
                 answers_by_test = sql.session.query(sql.Test_answer.content, sql.Test_answer.right) \
                     .join(sql.Test_question, sql.Test_question.id == sql.Test_answer.test_q_id) \
                     .filter(sql.Test_answer.test_q_id == id)
                 answers_by_test_ = [j[0] for j in answers_by_test]
                 answers_by_test_isright = [j[1] for j in answers_by_test]
-                bot.send_poll(callback.message.chat.id, question, answers_by_test_, correct_option_id=1)
+                right_answer_id = answers_by_test_isright.index(1)
+                bot.send_poll(callback.message.chat.id, question, answers_by_test_, is_anonymous=False,
+                              type='quiz', correct_option_id=right_answer_id)
 
-                @bot.poll_answer_handler()
+                @bot.poll_answer_handler(func=lambda callback: True)
                 def handle_poll_answer(pollAnswer):
-                    print(pollAnswer)
+                    global answer_counter
+                    bot.send_message(callback.message.chat.id, text=f'Текст {pollAnswer}')
+                    user_answer_id = pollAnswer['option_ids'][0]
+                    if user_answer_id == right_answer_id:
+                        answer_counter += 1
+
+
+
+
+             # {'poll_id': '5242230927362359544',
+             # 'user':
+             #           {'id': 319570020, 'is_bot': False, 'first_name': 'Daniil', 'username': 'da_maltsev',
+             #          'last_name': 'Maltsev', 'language_code': 'ru', 'can_join_groups': None,
+             #          'can_read_all_group_messages': None, 'supports_inline_queries': None},
+             #  'option_ids': [0]}
 
             sources = types.InlineKeyboardMarkup(row_width=1)
             back = types.InlineKeyboardButton(text='Назад в главное меню', callback_data='back')
             back_s = types.InlineKeyboardButton(text='Назад', callback_data=f'tests{back__}')
             sources.add(back, back_s)
             bot.send_message(callback.message.chat.id, text, reply_markup=sources)
-
-            # sources = types.InlineKeyboardMarkup(row_width=1)
-            # back = types.InlineKeyboardButton(text='Вернуться в меню', callback_data='back')
-            # sources.add(back)
-            # bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text='',
-            #                           reply_markup=sources)
 
 
 bot.polling()
