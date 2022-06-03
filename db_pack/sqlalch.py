@@ -3,7 +3,7 @@ from sqlalchemy import  create_engine, MetaData, Table, Integer, String, \
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, Session
 
-engine = create_engine('sqlite:///bot_db?check_same_thread=False')
+engine = create_engine('sqlite:///db_pack/bot_db?check_same_thread=False')
 cursor = engine.connect()
 session = Session(bind=engine)
 

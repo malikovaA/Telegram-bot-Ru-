@@ -2,4 +2,4 @@ TOKEN.py
 __pycache__
 .idea
 bot.py
-bot_db
+db_pack/bot_db

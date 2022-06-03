@@ -2,8 +2,8 @@ from TOKEN import token
 import telebot
 from telebot import types
 # from db import db_worker # тут был вариант с реализацией через rawSQL (сырой SQL код)
-from db import sqlalch as sql
-from db.sql_methods import get_or_create
+from db_pack import sqlalch as sql
+from db_pack.sql_methods import get_or_create
 
 bot = telebot.TeleBot(token)
 student_name = ''
@@ -48,6 +48,14 @@ def start(message):
             *[types.InlineKeyboardButton(text=title, callback_data='class' + str(ls.index(title) + 1)) for title in ls])
         bot.send_message(message.chat.id, 'Здравствуйте, учитель, выберите класс.', reply_markup=startKBoard)
 
+    @bot.message_handler(func=lambda m: m.text == '2222')
+    def start(message):
+        startKBoard = types.InlineKeyboardMarkup(row_width=1)
+        add_parent = types.InlineKeyboardButton(text='Подтвердить роль родителя', callback_data='add_parent')
+        startKBoard.add(add_parent)
+        bot.send_message(message.chat.id, 'Здравствуйте, родитель, подтвердите выбор роли.\n',
+                         reply_markup=startKBoard)
+
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def subject(callback):
@@ -63,6 +71,66 @@ def subject(callback):
     tests_ = [i[0] for i in sql.session.query(sql.Test_name.title).all()]
     questions = [i[0] for i in sql.session.query(sql.Test_question.id).all()]
     ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
+
+    """ Родитель. """
+    if callback.data == 'add_parent':
+        try:
+            parent_id = callback.message.chat.id
+            parent = sql.Parent(id=parent_id)
+            already_exist = sql.session.query(sql.Parent).get(parent.id)
+            if already_exist:
+                pass
+            else:
+                sql.session.add(parent)
+            sql.session.commit()
+            # get_or_create(sql.session, sql.Student, id=callback.message.chat.id, name=student_name, class_id=student_class)
+        finally:
+            startKBoard = types.InlineKeyboardMarkup(row_width=1)
+            show_results = types.InlineKeyboardButton(text='Посмотреть результаты', callback_data='show_results')
+            print_child_id = types.InlineKeyboardButton(text='Ввести id ребёнка', callback_data='print_child_id')
+            startKBoard.add(show_results, print_child_id)
+            text = 'Здравствуйте, родитель, выберите опцию.\n' \
+                   'Сначала необходимо ввести id ребёнка, если вы ранее этого не сделали.\n' \
+                   'Иначе опция просмотра результатов будет недоступна.'
+            bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                  text=text,
+                                  reply_markup=startKBoard)
+
+    """ Родитель. Ввод id ребёнка. """
+    if callback.data == 'print_child_id':
+        kb = types.InlineKeyboardMarkup(row_width=1)
+        back_p = types.InlineKeyboardButton(text='Назад', callback_data='add_parent')
+        kb.add(back_p)
+
+        @bot.message_handler(content_types=["text"])
+        def create_theme(message):
+            parent = sql.session.query(sql.Parent).get(message.chat.id)
+            parent.student_id = int(message.text)
+            sql.session.commit()
+            bot.send_message(message.chat.id, f'ID ребёнка - {message.text} добавлено,'
+                                              f' вы можете посмотреть его результаты!',reply_markup=kb)
+
+        bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                              text='Отправьте в чат id своего ребёнка для установления связи между вашими профилями.',
+                              reply_markup=kb)
+
+
+    """ Родитель. Просмотр результатов. """
+    if callback.data == 'show_results':
+        parent = sql.session.query(sql.Parent).get(callback.message.chat.id)
+        result = sql.session.query(sql.Result.result, sql.Test_name.title).join(sql.Test_name) \
+            .join(sql.Theme).filter(sql.Result.student_id == parent.student_id)
+        result_value = [i[0] for i in result]
+        result_name = [i[1] for i in result]
+        sources = types.InlineKeyboardMarkup(row_width=1)
+        text = 'Ознакомтесь с результатами:\n'
+        for v, n in zip(result_value, result_name):
+            text += f'За тест {n} набранно {v} баллов.\n'
+            # sources.add(types.InlineKeyboardButton(text=text))
+        back_p = types.InlineKeyboardButton(text='Назад', callback_data='add_parent')
+        sources.add(back_p)
+        bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
+                              reply_markup=sources)
 
 
     """ Тренажер. Вкладка для выбора темы """
@@ -357,9 +425,22 @@ def subject(callback):
             kb.add(
                 *[types.InlineKeyboardButton(text=title, callback_data=f'theme_s{str(theme_titles.index(title) + 1)}')
                   for title in theme_titles])
+            my_id = types.InlineKeyboardButton(text='Посмотреть свой id', callback_data='my_id')
+            kb.add(my_id)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
                                   text='Выберите тему.',
                                   reply_markup=kb)
+
+    """ Посмотреть id для ученика """
+    if callback.data == 'my_id':
+        prt = types.InlineKeyboardMarkup(row_width=1)
+        back = types.InlineKeyboardButton(text='Назад', callback_data='back')
+        prt.add(back)
+        bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                              text=f'Ваш id, чтобы передать родителю. {callback.message.chat.id}',
+                              reply_markup=prt)
+
+
 
     """ Меню с выбором раздела по теме """
     for i in range(len(theme_titles) + 1):
