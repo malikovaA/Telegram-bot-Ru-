@@ -1,7 +1,6 @@
 from TOKEN import token
-import telebot, json
+import telebot
 from telebot import types
-from random import randint
 # from db import db_worker # тут был вариант с реализацией через rawSQL (сырой SQL код)
 from db import sqlalch as sql
 from db.sql_methods import get_or_create
@@ -11,20 +10,29 @@ student_name = ''
 answer_counter = 0
 student_result = 0
 test_id_special = 0
+theme_titles = [i[0] for i in sql.session.query(sql.Theme.title).all()]
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    global student_name
+    global student_name, theme_titles
 
     bot.send_message(message.chat.id, 'Добро пожаловать в чат-бот по русскому языку для 6-9 классов!\n'
-                                      'Данный бот поможет вам освежить свои знания в рамках школьной программы и проверить их с помощью тестов.\n'
-                                      'Для продолжения работы <b> введите пароль </b>. \n'
-                                      'Узнать его можно у своего преподавателя по русскому языку.\n'
+                                      'Данный бот поможет вам освежить свои знания в рамках школьной программы и проверить их с помощью тестов.\n\n'
+                                      'Для доступа к тренажеру (тесты по различным темам) отправьте в чат <b>"тренажер"</b>.\n\n'
+                                      'Для продолжения работы в роли ученика иди учителя<b> введите соответствующий пароль </b>. \n'
+                                      'Узнать его можно у своего преподавателя по русскому языку.\n\n'
                                       'Для ученика пароль 1111, для учителя 0000.', parse_mode='HTML')
 
     ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
     student_name = f'{message.from_user.first_name} {message.from_user.last_name}'
+
+    @bot.message_handler(func=lambda m: m.text == 'тренажер')
+    def start(message):
+        startKBoard = types.InlineKeyboardMarkup(row_width=1)
+        startKBoard.add(
+            *[types.InlineKeyboardButton(text=title, callback_data=f'training{id+1}') for id, title in enumerate(theme_titles)])
+        bot.send_message(message.chat.id, 'Выберите тему.', reply_markup=startKBoard)
 
     @bot.message_handler(func=lambda m: m.text == '1111')
     def start(message):
@@ -43,19 +51,70 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda callback: callback.data)
 def subject(callback):
-    global student_name, answer_counter, student_result, test_id_special
+    global student_name, answer_counter, student_result, test_id_special, theme_titles
     count = 0
     back__ = 0
     count_t = 0
     back_track = 0
     back_back_ = 0
-    theme_titles = [i[0] for i in sql.session.query(sql.Theme.title).all()]
     theory_titles = [i[0] for i in sql.session.query(sql.Theory.title).all()]
     theory_content = [i[0] for i in sql.session.query(sql.Theory.content).all()]
     results_ = [i[0] for i in sql.session.query(sql.Result.id).all()]
     tests_ = [i[0] for i in sql.session.query(sql.Test_name.title).all()]
     questions = [i[0] for i in sql.session.query(sql.Test_question.id).all()]
     ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
+
+
+    """ Тренажер. Вкладка для выбора темы """
+    if callback.data == 'training_back':
+        startKBoard = types.InlineKeyboardMarkup(row_width=1)
+        startKBoard.add(
+            *[types.InlineKeyboardButton(text=title, callback_data=f'training{id}') for id, title in
+              enumerate(theme_titles)])
+        bot.send_message(callback.message.chat.id, 'Выберите тему.', reply_markup=startKBoard)
+
+    """ Тренажер. Вкладка для выбора теста """
+    for i in range(1, len(theme_titles) + 1):
+        if callback.data == f'training{i}':
+            test_by_theme = sql.session.query(sql.Test_name.title, sql.Test_name.id) \
+                .join(sql.Theme).filter(sql.Theme.id == i)
+            tests_titles = [i[0] for i in test_by_theme]
+            tests_id = [i[1] for i in test_by_theme]
+            sources = types.InlineKeyboardMarkup(row_width=1)
+            sources.add(
+                *[types.InlineKeyboardButton(text=title, callback_data=f'training_question{id}')
+                  for title, id in zip(tests_titles, tests_id)])
+            back = types.InlineKeyboardButton(text='Назад к выбору темы', callback_data='training_back')
+            sources.add(back)
+            bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                  text='Выберете тест для прохождения.',
+                                  reply_markup=sources)
+
+    """Тренажер. Вкладка для вопросов и ответов """
+    for i in range(1, len(tests_) + 1):
+        if callback.data == f'training_question{i}':
+            test_id_special = i
+            questions_by_test = sql.session.query(sql.Test_question.content, sql.Test_question.id) \
+                .join(sql.Test_name).filter(sql.Test_name.id == i)
+            questions_by_test_ = [i[0] for i in questions_by_test]
+            questions_by_test_id = [i[1] for i in questions_by_test]
+            text = f'Можете попрактиковаться:\n'
+
+            for question, id in zip(questions_by_test_, questions_by_test_id):
+                answers_by_test = sql.session.query(sql.Test_answer.content, sql.Test_answer.right) \
+                    .join(sql.Test_question, sql.Test_question.id == sql.Test_answer.test_q_id) \
+                    .filter(sql.Test_answer.test_q_id == id)
+                answers_by_test_ = [j[0] for j in answers_by_test]
+                answers_by_test_isright = [j[1] for j in answers_by_test]
+                right_answer_id = answers_by_test_isright.index(1)
+                bot.send_poll(callback.message.chat.id, question, answers_by_test_,
+                              type='quiz', correct_option_id=right_answer_id)
+
+            sources = types.InlineKeyboardMarkup(row_width=1)
+            back = types.InlineKeyboardButton(text='Назад к выбору темы', callback_data='training_back')
+            sources.add(back)
+            bot.send_message(callback.message.chat.id, text, reply_markup=sources)
+
 
     """ Повторный выбор класса для учителя """
     if callback.data == 'choose_class':
@@ -193,8 +252,7 @@ def subject(callback):
                 bot.reply_to(message, e)
         """
 
-        """ Раздел со статистикой по теме """
-
+    """ Раздел со статистикой по теме """
     for i in range(len(theme_titles) + 1):
         if callback.data in [f'stat_t_theme{i}']:
             result = sql.session.query(sql.Result.result, sql.Student.name, sql.Student.class_id, sql.Theme.title,
