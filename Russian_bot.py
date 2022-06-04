@@ -3,7 +3,9 @@ import telebot
 from telebot import types
 # from db import db_worker # тут был вариант с реализацией через rawSQL (сырой SQL код)
 from db_pack import sqlalch as sql
-from db_pack.sql_methods import get_or_create
+from db_pack.sql_methods import get_or_create, export_test_theme, export_test_class
+from datetime import datetime
+import os
 
 bot = telebot.TeleBot(token)
 student_name = ''
@@ -244,15 +246,21 @@ def subject(callback):
             for v, theme, test, student in zip(result_v, result_theme, result_test, result_student):
                 text += f'Ученик - {student}, Тема - {theme}, Тест - {test}, Результат - {v};\n\n'
             kb = types.InlineKeyboardMarkup(row_width=1)
-            back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+            back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             kb.add(back_t)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
                                   reply_markup=kb)
+            file = export_test_class(result)
+            with open(file, "rb") as f:
+                f = f.read()
+                bot.send_document(callback.message.chat.id, document=f,
+                                  visible_file_name=f'Статистика_по_классу_{datetime.today()}.xlsx')
+            os.remove(file)
 
         """ Добавление темы """
     if callback.data in ['add_theme']:
         kb = types.InlineKeyboardMarkup(row_width=1)
-        back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+        back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
         kb.add(back_t)
 
         @bot.message_handler(content_types=["text"])
@@ -269,7 +277,7 @@ def subject(callback):
         """ Меню с выбором тем для взаимодействия"""
     if callback.data in ['theme_choose_t']:
         kb = types.InlineKeyboardMarkup(row_width=1)
-        back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+        back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
         kb.add(*[types.InlineKeyboardButton(text=title, callback_data='theme_t' + str(theme_titles.index(title) + 1))
                  for title in theme_titles])
         kb.add(back_t)
@@ -284,7 +292,7 @@ def subject(callback):
             import_t = types.InlineKeyboardButton(text='Добавить тест', callback_data=f'import_t{i}')
             stat = types.InlineKeyboardButton(text='Статистика по теме', callback_data=f'stat_t_theme{i}')
             test_t = types.InlineKeyboardButton(text='Выбор теста', callback_data=f'test_t{i}')
-            back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+            back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             back_back = types.InlineKeyboardButton(text='Назад', callback_data='theme_choose_t')
             kb.add(import_t, stat, delete, test_t, back_t, back_back)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
@@ -294,7 +302,7 @@ def subject(callback):
         """ Раздел для импорта теста """
     if callback.data in ['import_t']:
         kb = types.InlineKeyboardMarkup(row_width=1)
-        back_t = types.InlineKeyboardButton(text='Назад', callback_data='back_t')
+        back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
         kb.add(back_t)
         bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
                               text='Добавьте файл установленного формата с тестом',
@@ -337,11 +345,17 @@ def subject(callback):
             for v, c, test, student in zip(result_v, result_class, result_test, result_student):
                 text += f'Ученик - {student}, класс - {c + 5}, Тест - {test}, Результат - {v};\n'
             kb = types.InlineKeyboardMarkup(row_width=1)
-            back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+            back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             back_back = types.InlineKeyboardButton(text='Назад', callback_data=f'theme_t{i}')
             kb.add(back_t, back_back)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id, text=text,
                                   reply_markup=kb)
+            file = export_test_theme(result)
+            with open(file, "rb") as f:
+                f = f.read()
+                bot.send_document(callback.message.chat.id, document=f, visible_file_name=f'Результаты_по_теме_{datetime.today()}.xlsx')
+            os.remove(file)
+
 
         """ Меню для просмотра списка тестов """
     for i in range(len(theme_titles) + 1):
@@ -353,7 +367,7 @@ def subject(callback):
                 sql.Theme.id == i)
             tests_for_theme_ = [i[0] for i in tests_for_theme]
             text = f'Список тестов по теме {tests_for_theme[0][1]}:\n'
-            back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+            back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             back_back = types.InlineKeyboardButton(text='Назад', callback_data=f'theme_t{i}')
             kb.add(back_t, back_back)
             kb.add(*[
@@ -375,7 +389,7 @@ def subject(callback):
             text = f'Список вопросов по тесту :\n'
             for i in q_for_test:
                 text += f'{i}\n'
-            back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+            back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
             back_back = types.InlineKeyboardButton(text='Назад', callback_data=f'test_t{back__}')
             delete = types.InlineKeyboardButton(text='Удалить этот тест', callback_data='delete_test')
             kb.add(back_t, back_back, delete)
@@ -386,7 +400,7 @@ def subject(callback):
     """ Меню для удаления теста """
     if callback.data == 'delete_test':
         kb = types.InlineKeyboardMarkup(row_width=1)
-        back_t = types.InlineKeyboardButton(text='Назад в главное меню', callback_data=f'back_t{count_t}')
+        back_t = types.InlineKeyboardButton(text='К выбору класса', callback_data='choose_class')
         back_back = types.InlineKeyboardButton(text='Назад', callback_data=f'test_q{back_back_}')
         kb.add(back_t, back_back)
 
@@ -394,7 +408,7 @@ def subject(callback):
         def delete_test(message):
             test_for_delete = get_or_create(sql.session, sql.Test_name, title=message.text)
             # sql.session.query(sql.Test_name).filter(sql.Test_name.title==message.text).one()
-            ''' тут стоит допилить вывод сообщения при неправильном вводе названия'''
+            ''' тут *** вывод сообщения при неправильном вводе названия'''
             if test_for_delete:
                 sql.session.delete(test_for_delete)
                 sql.session.commit()
