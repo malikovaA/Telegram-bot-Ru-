@@ -77,6 +77,14 @@ class Parent(Base):
     student_id = Column(Integer, ForeignKey('students.id'))
     student = relationship('Student', backref='parent')
 
+class Interesting(Base):
+    __tablename__ = 'interesting'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(100), nullable=False)
+    content = Column(String(100))
+    theme_id = Column(Integer, ForeignKey('themes.id'))
+    interesting = relationship('Theme', backref='interesting')
+
 
 # Base.metadata.drop_all(engine) # Удаление всего
 # Base.metadata.create_all(engine)
