@@ -6,6 +6,7 @@ from db_pack import sqlalch as sql
 from db_pack.sql_methods import get_or_create, export_test_theme, export_test_class
 from datetime import datetime
 import os
+from random import randint
 
 bot = telebot.TeleBot(token)
 student_name = ''
@@ -29,7 +30,7 @@ def start(message):
     ls = [i[0] for i in sql.session.query(sql.Class.title).all()]
     student_name = f'{message.from_user.first_name} {message.from_user.last_name}'
 
-    @bot.message_handler(func=lambda m: m.text == 'тренажер')
+    @bot.message_handler(func=lambda m: m.text in ['тренажер','тренажёр','Тренажер','Тренажёр'])
     def start(message):
         startKBoard = types.InlineKeyboardMarkup(row_width=1)
         startKBoard.add(
@@ -154,10 +155,23 @@ def subject(callback):
             sources.add(
                 *[types.InlineKeyboardButton(text=title, callback_data=f'training_question{id}')
                   for title, id in zip(tests_titles, tests_id)])
+            interest = types.InlineKeyboardButton(text='Интересные факты', callback_data=f'interest')
             back = types.InlineKeyboardButton(text='Назад к выбору темы', callback_data='training_back')
-            sources.add(back)
+            sources.add(interest, back)
             bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
                                   text='Выберете тест для прохождения.',
+                                  reply_markup=sources)
+
+    """Тренажёр. Вкладка с интересными фактами """
+    if callback.data == f'interest':
+            interest_content_ = [i[0] for i in sql.session.query(sql.Interesting.content)]
+            sources = types.InlineKeyboardMarkup(row_width=1)
+            back = types.InlineKeyboardButton(text='Назад', callback_data='training_back')
+            sources.add(back)
+            bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                                  text='Интересные факты.')
+            text = interest_content_[randint(0, len(interest_content_) - 1)]
+            bot.send_message(chat_id=callback.message.chat.id, text=text,
                                   reply_markup=sources)
 
     """Тренажер. Вкладка для вопросов и ответов """
@@ -224,10 +238,10 @@ def subject(callback):
 
             @bot.message_handler(content_types=["text"])
             def send_message_to_class(message):
-                students_id_from_class = sql.session.query(sql.Student.id).filter(sql.Student.class_id==i)
-                students_id_from_class = [j[0] for j in students_id_from_class]
-                for id in students_id_from_class:
-                    bot.send_message(id, f'{message.text}')
+                # students_id_from_class = sql.session.query(sql.Student.id).filter(sql.Student.class_id==i)
+                # students_id_from_class = [j[0] for j in students_id_from_class]
+                # for id in students_id_from_class:
+                #     bot.send_message(id, f'{message.text}')
                 text_message = f'Рассылка вида:\n{message.text}\nУспешно отправлена!'
                 bot.send_message(callback.message.chat.id, text=text_message,
                                  reply_markup=kb)
@@ -464,7 +478,7 @@ def subject(callback):
                 back_track = i
             prt = types.InlineKeyboardMarkup(row_width=1)
             train = types.InlineKeyboardButton(text='ТРЕНАЖЕР', callback_data=f'train{i}')
-            interest = types.InlineKeyboardButton(text='ИНТЕРЕСНЫЕ ФАКТЫ', callback_data=f'interest{i}')
+            interest = types.InlineKeyboardButton(text='ИНТЕРЕСНЫЕ ФАКТЫ', callback_data='interest')
             theory = types.InlineKeyboardButton(text='ТЕОРИЯ', callback_data=f'theory{i}')
             tests = types.InlineKeyboardButton(text='ТЕСТЫ', callback_data=f'tests{i}')
             results = types.InlineKeyboardButton(text='РЕЗУЛЬТАТЫ', callback_data=f'results{i}')
@@ -518,19 +532,16 @@ def subject(callback):
 
 
         """ Вкладка с интересными фактами """
-    for i in range(len(theory_titles) + 1):
-        if callback.data == f'interest{i}':
-            interest_titles_ = [i[0] for i in sql.session.query(sql.Interesting.title).filter(sql.Interesting.theme_id == i)]
-            interest_content_ = [i[0] for i in sql.session.query(sql.Interesting.content).filter(sql.Interesting.theme_id == i)]
-            sources = types.InlineKeyboardMarkup(row_width=1)
-            back = types.InlineKeyboardButton(text='Назад', callback_data='back')
-            sources.add(*[types.InlineKeyboardButton(text=title, url=content) for title, content in zip(
-                interest_titles_, interest_content_
-            )])
-            sources.add(back)
-            bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
-                                  text='Интересные факты.',
-                                  reply_markup=sources)
+    if callback.data == f'interest':
+        interest_content_ = [i[0] for i in sql.session.query(sql.Interesting.content)]
+        sources = types.InlineKeyboardMarkup(row_width=1)
+        back = types.InlineKeyboardButton(text='Назад', callback_data='training_back')
+        sources.add(back)
+        bot.edit_message_text(chat_id=callback.message.chat.id, message_id=callback.message.id,
+                              text='Интересные факты.')
+        text = interest_content_[randint(0, len(interest_content_) - 1)]
+        bot.send_message(chat_id=callback.message.chat.id, text=text,
+                         reply_markup=sources)
 
         """ Вкладка с теорией """
     for i in range(len(theory_titles) + 1):
@@ -551,7 +562,7 @@ def subject(callback):
     for i in range(len(results_) + 1):
         if callback.data == f'results{i}':
             result = sql.session.query(sql.Result.result, sql.Test_name.title).join(sql.Test_name) \
-                .join(sql.Theme).filter(sql.Theme.id == i)
+                .join(sql.Theme).filter(sql.Theme.id == i, sql.Result.student_id == callback.message.chat.id)
             result_value = [i[0] for i in result]
             result_name = [i[1] for i in result]
             sources = types.InlineKeyboardMarkup(row_width=1)

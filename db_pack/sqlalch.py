@@ -80,10 +80,7 @@ class Parent(Base):
 class Interesting(Base):
     __tablename__ = 'interesting'
     id = Column(Integer, primary_key=True)
-    title = Column(String(100), nullable=False)
-    content = Column(String(100))
-    theme_id = Column(Integer, ForeignKey('themes.id'))
-    interesting = relationship('Theme', backref='interesting')
+    content = Column(String(200))
 
 
 # Base.metadata.drop_all(engine) # Удаление всего
