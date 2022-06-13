@@ -1,6 +1,6 @@
 from .sqlalch import session,Test_name, Test_answer, Test_question
 from openpyxl import load_workbook, Workbook
-import datetime
+# import datetime
 
 # import telebot
 # bot = telebot.TeleBot(token)
@@ -15,7 +15,7 @@ def export_test_class(results):
     rows_for_export = [[a,b,c,d] for a,b,c,d in zip(column_1, column_2, column_3, column_4)]
     for row in rows_for_export:
         worksheet.append(row)
-    file_name = f'db_pack/files/export_class_{datetime.datetime.today()}.xlsx'
+    file_name = f'db_pack/files/export_class_.xlsx'
     wb.save(file_name)
     return file_name
 
@@ -29,7 +29,7 @@ def export_test_theme(results):
     rows_for_export = [[a,b,c,d] for a,b,c,d in zip(column_1, column_2, column_3, column_4)]
     for row in rows_for_export:
         worksheet.append(row)
-    file_name = f'db_pack/files/export_theme_{datetime.datetime.today()}.xlsx'
+    file_name = f'db_pack/files/export_theme_.xlsx'
     wb.save(file_name)
     return file_name
 
